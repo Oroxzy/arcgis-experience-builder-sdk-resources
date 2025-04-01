@@ -19,6 +19,7 @@
   LICENSE file.
 */
 /** @jsx jsx */
+/** @jsx jsx */
 import { type AllWidgetProps, jsx, React } from 'jimu-core'
 import { JimuMapViewComponent, type JimuMapView } from 'jimu-arcgis'
 import Editor from 'esri/widgets/Editor'
@@ -28,7 +29,7 @@ interface State {
   currentWidget: Editor
 }
 
-export default class Widget extends React.PureComponent<AllWidgetProps<unknown>, State> {
+export default class Widget extends React.PureComponent<AllWidgetProps<any>, State> {
   private readonly myRef = React.createRef<HTMLDivElement>()
 
   constructor (props) {
@@ -40,37 +41,35 @@ export default class Widget extends React.PureComponent<AllWidgetProps<unknown>,
   }
 
   activeViewChangeHandler = (jmv: JimuMapView) => {
-    if (this.state.jimuMapView) {
-      if (this.state.currentWidget) {
-        this.state.currentWidget.destroy()
-      }
+    if (this.state.jimuMapView && this.state.currentWidget) {
+      this.state.currentWidget.destroy()
     }
 
-    if (jmv) {
-      this.setState({
-        jimuMapView: jmv
+    if (jmv && this.myRef.current) {
+      this.setState({ jimuMapView: jmv })
+
+      const allowed = []
+      if (this.props.config?.allowCreate) allowed.push('create')
+      if (this.props.config?.allowUpdate) allowed.push('update')
+      if (this.props.config?.allowDelete) allowed.push('delete')
+
+      const newEditor = new Editor({
+        view: jmv.view,
+        container: this.myRef.current,
+        allowedWorkflows: allowed
       })
 
-      if (this.myRef.current) {
-        const newEditor = new Editor({
-          view: jmv.view,
-          container: this.myRef.current
-        })
-
-        this.setState({
-          currentWidget: newEditor
-        })
-      } else {
-        console.error('could not find this.myRef.current')
-      }
+      this.setState({
+        currentWidget: newEditor
+      })
+    } else {
+      console.error('could not find this.myRef.current')
     }
   }
 
-  componentDidUpdate = evt => {
-    if (this.props.useMapWidgetIds && this.props.useMapWidgetIds.length === 0) {
-      if (this.state.currentWidget) {
-        this.state.currentWidget.destroy()
-      }
+  componentDidUpdate = () => {
+    if (this.props.useMapWidgetIds?.length === 0 && this.state.currentWidget) {
+      this.state.currentWidget.destroy()
     }
   }
 
@@ -78,7 +77,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<unknown>,
     let mvc = <p>Please select a map.</p>
 
     const css = `
-    .esri-editor__scroller {
+      .esri-editor__scroller {
         overflow-y: auto;
         padding-top: $cap-spacing--half;
         padding-bottom: $cap-spacing;
@@ -86,8 +85,8 @@ export default class Widget extends React.PureComponent<AllWidgetProps<unknown>,
       .esri-editor__content-group {
         max-height: 1em;
       }
+    `
 
-      `
     if (
       this.props.hasOwnProperty('useMapWidgetIds') &&
       this.props.useMapWidgetIds &&

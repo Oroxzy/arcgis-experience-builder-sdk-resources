@@ -22,13 +22,12 @@ import type { AllWidgetSettingProps } from 'jimu-for-builder'
 import defaultMessages from './translations/default'
 import {
   MapWidgetSelector,
-  SettingSection
+  SettingSection,
+  SettingRow
 } from 'jimu-ui/advanced/setting-components'
+import { Switch } from 'jimu-ui'
 
-export default class Setting extends React.PureComponent<
-  AllWidgetSettingProps<unknown>,
-  any
-> {
+export default class Setting extends React.PureComponent<AllWidgetSettingProps<any>, any> {
   onMapWidgetSelected = (useMapWidgetIds: string[]) => {
     this.props.onSettingChange({
       id: this.props.id,
@@ -36,7 +35,16 @@ export default class Setting extends React.PureComponent<
     })
   }
 
-  render() {
+  onToggle = (key: string, value: boolean) => {
+    this.props.onSettingChange({
+      id: this.props.id,
+      config: this.props.config.set(key, value)
+    })
+  }
+
+  render () {
+    const config = this.props.config || {}
+
     return (
       <div className="widget-setting-js-api-widget">
         <SettingSection
@@ -50,6 +58,27 @@ export default class Setting extends React.PureComponent<
             onSelect={this.onMapWidgetSelected}
             useMapWidgetIds={this.props.useMapWidgetIds}
           />
+        </SettingSection>
+
+        <SettingSection title="Editor Optionen">
+          <SettingRow label="Erstellen erlauben">
+            <Switch
+              checked={!!config.allowCreate}
+              onChange={e => this.onToggle('allowCreate', e.target.checked)}
+            />
+          </SettingRow>
+          <SettingRow label="Bearbeiten erlauben">
+            <Switch
+              checked={!!config.allowUpdate}
+              onChange={e => this.onToggle('allowUpdate', e.target.checked)}
+            />
+          </SettingRow>
+          <SettingRow label="Löschen erlauben">
+            <Switch
+              checked={!!config.allowDelete}
+              onChange={e => this.onToggle('allowDelete', e.target.checked)}
+            />
+          </SettingRow>
         </SettingSection>
       </div>
     )
